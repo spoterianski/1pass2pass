@@ -44,19 +44,34 @@ def read_1pif(filename):
 def parse_1pif_items(pass_items, folder_name, print_only=False, force=False,
                      pass_in_first_line=False):
     """Parse 1pif items"""
-    logger.info(f'Found {len(pass_items)} items')
+    counts = dict()
+    counts['Total'] = len(pass_items)
     logger.info('start parsing')
 
     result = []
     for pitem in pass_items:
-        result.append(parse_1pid(pitem))
+        try:
+            result.append(parse_1pid(pitem))
+            counts['Parsed success'] = counts.get('Parsed success', 0) + 1
+        except Exception as exc:
+            logger.error(f'Error while parsing item "{pitem["title"]}": {exc}')
+            counts['Parsed error'] = counts.get('Parsed error', 0) + 1
     logger.info('finish parsing')
 
     if print_only:
         for title, vals in result:
             print_item(title, vals)
-        return
-    store_items(result, folder_name, force, pass_in_first_line)
+    else:
+        stored_counts = store_items(result, folder_name, force, pass_in_first_line)
+        counts.update(stored_counts)
+    # print counts    
+    print_counts(counts)
+
+def print_counts(counts):
+    """Print counts"""
+    for key, val in sorted(counts.items()):
+        logger.info(f'{key}: {val}')
+
 
 def parse_1pid(pitem):
     """Parse 1pif item"""
@@ -160,6 +175,9 @@ def parse_urls(urls):
 def convert_title(title):
     """Convert title to filename"""
     title = title.replace(' ', '_').lower()
+    title = title.replace('&', '_and_')
+    title = title.replace('(', '\(')
+    title = title.replace(')', '\)')
     if title.startswith('http://'):
         title = title[7:]
     elif title.startswith('https://'):
@@ -182,30 +200,41 @@ def print_item(title, vals):
         print(f'{key}: {val}')
     print()
 
-def store_items(items, folder_name, first_line=False, force=False):
+def store_items(items, folder_name, force=False, first_line=False):
     """Store items"""
     logger.info('start storing')
+    counts = dict()
     for item in items:
-        title, vals = item
-        folder_name = convert_folder_name(folder_name)
-        fname = convert_title(title)
-        logger.info(f'store: "{title} -> {fname}"')
-        cmd = 'pass insert '
-        if force:
-            cmd += '-f '
-        cmd += f'-m {folder_name}/{fname}'
-        with subprocess.Popen(cmd, shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
-                                stderr=subprocess.PIPE, encoding='utf-8') as proc:
-            if first_line and 'Password' in vals:
-                proc.stdin.write(f'{vals["Password"]}\n')
-            proc.stdin.write(f'# {title}\n')
-            for key, val in vals.items():
-                proc.stdin.write(f'{key}: {val}\n')
+        try:
+            title, vals = item
+            folder_name = convert_folder_name(folder_name)
+            fname = convert_title(title)
+            logger.info(f'store: "{title} -> {fname}"')
+            cmd = 'pass insert '
+            if force:
+                cmd += '-f '
+            cmd += f'-m {folder_name}/{fname}'
+            with subprocess.Popen(cmd, shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+                                    stderr=subprocess.PIPE, encoding='utf-8') as proc:
+                if first_line and 'Password' in vals:
+                    proc.stdin.write(f'{vals["Password"]}\n\n')
+                proc.stdin.write(f'# {title}\n')
+                for key, val in vals.items():
+                    proc.stdin.write(f'{key}: {val}\n')
 
-            lines = proc.communicate()[0]
-            for line in lines.split('\n'):
-                logger.debug(line)
+                lines = proc.communicate()[0]
+                for line in lines.split('\n'):
+                    logger.debug(line)
+                if proc.returncode != 0:
+                    logger.error(f'Error while storing "{title}": {lines}')
+                    counts['Stored errors'] = counts.get('Stored errors', 0) + 1
+                else:
+                    counts['Stored success'] = counts.get('Stored success', 0) + 1
+        except Exception as exc:
+            logger.error(f'Error while storing "{title}": {exc}')
+            counts['Stored errors'] = counts.get('Stored errors', 0) + 1
     logger.info('finish storing')
+    return counts
 
 def main():
     """Main function"""

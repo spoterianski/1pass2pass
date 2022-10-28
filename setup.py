@@ -5,7 +5,7 @@ with open("README.md", "r", encoding='utf-8') as fh:
 
 setup(
     name='1pass2pass',
-    version='0.0.1',
+    version='0.0.2',
     description='Utility for transfer items from the 1password (*.1pif files) to the pass',
     long_description=long_description,
     long_description_content_type="text/markdown",
@@ -15,7 +15,7 @@ setup(
     requires=['loguru'],
     install_requires=['loguru'],
     url='https://github.com/spoterianski/1pass2pass',
-    download_url='https://github.com/spoterianski/1pass2pass/tarball/v0.0.1',
+    download_url='https://github.com/spoterianski/1pass2pass/tarball/v0.0.2',
     scripts=['bin/1pass2pass'],
     keywords= ("1pass2pass", "1password", "pass"),
     classifiers=[

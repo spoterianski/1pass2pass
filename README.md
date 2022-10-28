@@ -25,6 +25,9 @@ Optional arguments:
 -fl, --first-line   - Put password in first line (default=False)
 ```
 
+> WARN: If you whant to use the `Pass` aplication on iOS, you need to use the `--first-line` option.
+> Because the `Pass` app on iOS find the password in the first line.
+
 ## Example
 
 ```console
