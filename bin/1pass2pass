@@ -1,5 +1,8 @@
+#!/usr/bin/env python
+
 """
-Utilite for convert 1password item to pass item
+Utility for transfer items from the 1password (*.1pif files)
+to the pass ([the standard unix password manager](https://www.passwordstore.org)).
 """
 import os
 import sys
@@ -98,8 +101,8 @@ def parse_1pid(pitem):
     # Make result dict
     result_dict = dict()
     for var in vals:
-        key = var[0].strip().capitalize()
-        val = var[1]
+        key = str(var[0]).strip().capitalize()
+        val = str(var[1]).strip()
         if key not in result_dict and val.strip() != '':
             result_dict[key] = val
 
@@ -139,7 +142,7 @@ def parse_password_history(history):
     """Parse password history"""
     vals = []
     if len(history) > 0:
-        vars.append(('\n## Password history', ''))
+        vals.append(('\n## Password history', ''))
     for hist in history:
         if 'value' in hist and 'time' in hist:
             timestamp = ts_to_datetime_str(hist['time'])
@@ -207,9 +210,9 @@ def store_items(items, folder_name, first_line=False, force=False):
 def main():
     """Main function"""
     parser = argparse.ArgumentParser(prog='1pass2pass',
-                                     description='Utility for converting ' + \
-                                                 '1password data to pass format',
-                                     epilog = 'written by @spoterianski')
+                                     description='Utility for transfer items from the 1password (*.1pif files) ' + \
+                                                 'to the pass.'
+                                     )
     parser.add_argument("pif_filename", metavar="<1pif filename>",
                         help="Path to *.1pif file for processing",
                         type=str)
@@ -222,7 +225,7 @@ def main():
                         action="store_true")
     parser.add_argument("-f", "--force", help="force overwrite existing passwords (default=False)",
                         action="store_true", default=False)
-    parser.add_argument("-fl", "--first-line",  help="Put password in first line (default=False)",
+    parser.add_argument("-1", "--first-line",  help="Put password in first line (default=False)",
                         action="store_true", default=False)
     args = parser.parse_args()
     if not os.path.isfile(args.pif_filename):

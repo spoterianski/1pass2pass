@@ -1,4 +1,5 @@
 data
 1pass2pass.iml
 .vscode
-
+dist
+build
