@@ -2,13 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
-## [0.0.2] 2022-10-28
+## [0.0.2-0.0.3] 2022-10-28
 
 ### Added
 
 - counts of processed items and show report in the end of processing
 - error handling
 - added notice about `--first-line` option for iOS users
+- fixed classifiers in `setup.py`
 
 ### Updated
 
